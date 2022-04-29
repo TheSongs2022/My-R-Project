@@ -1,0 +1,69 @@
+---
+title: "Whether Sexism exists in the IT industry?"
+author: Yang Song
+date: April 12, 2022
+output: word_document
+---
+  # Installing 'rmarkdown' Package
+  ```{r pressure, eval=FALSE}
+install.packages("rmarkdown")
+install.packages("knitr")
+library(rmarkdown)
+library(knitr)
+```
+##Seting global options
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Reading Excel files
+## Save the csv file into my working directory as an Excel sheet first
+```{r echo=FALSE}
+getwd()
+setwd('C:/Users/songy/Desktop/663/Project-663/My-R-Project')
+require(plyr)
+require(dplyr)
+data<-read.csv('2021_survey_results.csv')
+```
+# selecting certain variables to study
+```{r echo=FALSE, include=FALSE, warning=FALSE}
+
+D1 <- data %>% select(Currency,CompTotal,CompFreq,Gender,Age,YearsCodePro)
+```
+## Remove all the rows with NA
+```{r echo=TRUE}
+D2 <- na.omit(D1)
+```
+## Cleaning the data & Specifying certain rows to study
+```{r echo=TRUE}
+D2[D2$CompFreq=="Monthly","CompTotal"]<-D2[D2$CompFreq=="Monthly","CompTotal"]*12
+D2[D2$CompFreq=="Weekly","CompTotal"]<-D2[D2$CompFreq=="Weekly","CompTotal"]*52
+unique(D2$YearsCodePro)
+D2[D2$YearsCodePro=='Less than 1 year','YearsCodePro']<-0.5
+D2[D2$YearsCodePro=='More than 50 years','YearsCodePro']<-55
+D2$YearsCodePro<-as.numeric(D2$YearsCodePro)
+
+Gender_Female <- which(D2$Gender == 'Woman')
+D2$Gender[Gender_Female] <- 1
+Gender_Male <- which(D2$Gender == 'Man')
+D2$Gender[Gender_Male] <- 0
+
+D2$Gender <- as.numeric(D2$Gender)
+
+D3 <- D2 %>% filter(Currency=='USD	United States dollar',  Gender %in% c('0', '1'), YearsCodePro %in% c(1:50))
+```
+# Insert a table D3
+```{r echo = FALSE }
+library(knitr)
+knitr::kable(head(D3), digits = 4, caption = '***2021 Survey Results With Studied Variables***')
+```
+#Summary of D3
+```{r}
+summary(D3)
+```
+
+# Multiple Regression
+```{r echo=FALSE}
+str(D3)
+D4 <- lm (CompTotal~Gender + Age + YearsCodePro, data=D3)
+summary(D4)
+```
