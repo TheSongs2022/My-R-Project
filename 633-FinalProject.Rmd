@@ -1,0 +1,104 @@
+---
+title: "Whether Sexism exists in the IT industry?"
+author: Yang Song
+date: May 03, 2022
+output: word_document
+---
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+# Installing 'rmarkdown' Package
+```{r pressure, eval=FALSE}
+install.packages("rmarkdown")
+install.packages("knitr")
+library(rmarkdown)
+library(knitr)
+```
+##Seting global options
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Reading Excel files
+## Save the csv file into my working directory as an Excel sheet first
+```{r echo=FALSE}
+getwd()
+setwd('C:/Users/songy/Desktop/663-R/Project-663/My-R-Project')
+require(plyr)
+require(dplyr)
+data<-read.csv('2021_survey_results.csv')
+```
+# selecting certain variables to study
+```{r echo=FALSE, include=FALSE, warning=FALSE}
+library(dplyr)
+D1 <- data %>% select(Currency,CompTotal,CompFreq,Gender,Age,YearsCodePro,YearsCode)
+```
+## Remove all the rows with NA
+```{r echo=TRUE}
+D2 <- na.omit(D1)
+```
+## Cleaning the data & Specifying certain rows to study
+```{r echo=TRUE}
+a <- which(D2$CompTotal== 'Monthly')
+D2$CompTotal[a] <- D2$CompTotal[a]*12
+b <- which(D2$CompTotal== 'Weekly')
+D2$CompTotal[b] <- D2$CompTotal[b]*52
+
+c <- which(D2$YearsCodePro== 'Less than 1 year')
+D2$YearsCodePro[c] <- 0.5
+d <- which(D2$YearsCodePro=='More than 50 years')
+D2$YearsCodePro[d] <- 55
+D2$YearsCodePro<-as.numeric(D2$YearsCodePro)
+
+Gender_Female <- which(D2$Gender == 'Woman')
+D2$Gender[Gender_Female] <- 1
+Gender_Male <- which(D2$Gender == 'Man')
+D2$Gender[Gender_Male] <- 0
+D2$Gender <- as.numeric(D2$Gender)
+
+e<-which(D2$Age=='18-24 years old')
+D2$Age[e]<-1
+f<-which(D2$Age=='25-34 years old')
+D2$Age[f]<-2
+g<-which(D2$Age=='35-44 years old')
+D2$Age[g]<-3
+h<-which(D2$Age=='45-54 years old')
+D2$Age[h]<-4
+i<-which(D2$Age=='55-64 years old')
+D2$Age[i]<-5
+j<-which(D2$Age=='65 years or older')
+D2$Age[j]<-6
+k<-which(D2$Age=='Prefer not to say')
+D2$Age[k]<-7
+l<-which(D2$Age=='Under 18 years old')
+D2$Age[l]<-0
+D2$Age <- as.numeric(D2$Age)
+
+m <- which(D2$YearsCode== 'Less than 1 year')
+D2$YearsCode[m] <- 0.5
+n <- which(D2$YearsCode=='More than 50 years')
+D2$YearsCodePro[n] <- 55
+D2$YearsCode<-as.numeric(D2$YearsCode)
+
+D3 <- D2 %>% select (CompTotal,Gender, Age,YearsCodePro,YearsCode)
+
+install.packages("ggplot2")
+library("ggplot2")
+ggplot(data=D2)+geom_histogram(aes(x=CompTotal))+xlim(0,1000000)
+D3 <- D2 %>% filter(CompTotal%in% c(0,250000))
+```
+# Insert a table D3
+```{r echo = FALSE }
+library(knitr)
+knitr::kable(head(D3), digits = 4, caption = '***2021 Survey Results With Studied Variables***')
+```
+#Summary of D3
+```{r}
+summary(D3)
+```
+
+# Multiple Regression
+```{r echo=FALSE}
+str(D3)
+D4 <- lm (CompTotal~Gender + Age + YearsCodePro,YearsCode, data=D3)
+summary(D4)
+```
